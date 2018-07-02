@@ -9100,6 +9100,8 @@ function loadData(src, fn) {
     object.isosmooth = parsed.volume.properties.isosmooth;
     object.colour = parsed.volume.properties.isocolour;
     object.density = parsed.volume.properties.density;
+    object.mindensity = parsed.volume.properties.mindensity;
+    object.maxdensity = parsed.volume.properties.maxdensity;
     object.power = parsed.volume.properties.power;
     if (parsed.volume.properties.usecolourmap) object.colourmap = 0;
     object.tricubicfilter = parsed.volume.properties.tricubicFilter;
@@ -9187,6 +9189,8 @@ function getData(compact, matrix) {
     object.isosmooth = vdat.properties.isosmooth;
     object.colour = vdat.properties.colour;
     object.density = vdat.properties.density;
+    object.mindensity = vdat.properties.mindensity;
+    object.maxdensity = vdat.properties.maxdensity;
     object.power = vdat.properties.power;
     object.tricubicfilter = vdat.properties.tricubicFilter;
     if (vdat.properties.usecolourmap)
