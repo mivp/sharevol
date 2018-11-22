@@ -255,7 +255,7 @@ function saveDataJsonAs() {
       return;
   }
   preset = preset.replace(/ /g,"_");
-  let file = 'data/tags/96e443/volume_result/vol_web_' + preset + '.json';
+  let file = 'data/tags/' + tag + '/volume_result/vol_web_' + preset + '.json';
   console.log(file);
   socket.emit('savedatajson', { file: file, json: getData() });
 }

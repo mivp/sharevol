@@ -9231,8 +9231,8 @@ function getData(compact, matrix) {
 
     //Colourmap
     state.colourmaps = [colours.palette.get()];
-    delete state.colourmaps[0].background;
     state.colourmaps[0].name = "default";
+    delete state.colourmaps[0].background;
     state.properties.background = colours.palette.background.html();
   }
 
@@ -9260,7 +9260,7 @@ function saveDataJsonAs() {
       return;
   }
   preset = preset.replace(/ /g,"_");
-  let file = 'data/tags/96e443/volume_result/vol_web_' + preset + '.json';
+  let file = 'data/tags/' + tag + '/volume_result/vol_web_' + preset + '.json';
   console.log(file);
   socket.emit('savedatajson', { file: file, json: getData() });
 }
@@ -9400,7 +9400,7 @@ function imageLoaded(image) {
 			let preset = 'vol_web.json';
 			if(value !== 'default') preset = 'vol_web_' + value + '.json';
 			let parts = window.location.href.split('?');
-			window.location.href = parts[0] + '?data=data/tags/96e443/volume_result/' + preset + '&reset';
+			window.location.href = parts[0] + '?data=data/tags/' + tag + '/volume_result/' + preset + '&reset';
 		});
     
     
