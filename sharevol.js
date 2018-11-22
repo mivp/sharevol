@@ -9210,6 +9210,7 @@ function getData(compact, matrix) {
     //Colourmap
     state.colourmaps = [colours.palette.get()];
     delete state.colourmaps[0].background;
+    state.colourmaps[0].name = "default";
     state.properties.background = colours.palette.background.html();
   }
 
