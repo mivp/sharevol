@@ -22,6 +22,15 @@ var mobile;
 var socket = io();
 var jsonfile;
 
+// for save as
+var hSave = null;
+var tag = null;
+var presetList = ['default'];
+var currPreset = 'default';
+var guiObj = {
+  saveItem: 'default'
+};
+
 function initPage() {
   window.onresize = autoResize;
 
@@ -53,6 +62,19 @@ function initPage() {
   var json = getSearchVariable("data");
   //Attempt to load default.json
   if (!json) json = "default.json";
+  
+  // parse tag and preset
+  let parts = json.split('/');
+  tag = parts[2];
+  let preset = parts[4];
+  parts = preset.split('&');
+  preset = parts[0];
+  parts = preset.split('.');
+  preset = parts[0];
+  preset = preset.substr(8);
+  if(preset === '') preset = 'default';
+  currPreset = preset;
+  console.log('tag and preset: ', tag, currPreset);
 
   $('status').innerHTML = "Loading params...";
   ajaxReadFile(decodeURI(json), loadData, true);
@@ -220,20 +242,73 @@ function saveDataJson() {
   socket.emit('savedatajson', { file: jsonfile, json: getData() });
 }
 
+function saveDataJsonAs() {
+  let d = new Date();
+  let tstr = d.getYear() + '' + d.getMonth() + '' + d.getDay() + '-' + d.getHours() + '' + d.getMinutes();
+  var preset = prompt("Save current settings as", tstr);
+  console.log(preset);
+  if (preset === null) return;
+  if (preset === '') {
+      $('status').innerHTML = "Cannot save empty preset!";
+      info.show();
+      setTimeout(hideMessage, 3000);
+      return;
+  }
+  preset = preset.replace(/ /g,"_");
+  let file = 'data/tags/96e443/volume_result/vol_web_' + preset + '.json';
+  console.log(file);
+  socket.emit('savedatajson', { file: file, json: getData() });
+}
+
 socket.on('savedatajson', function (data) {
-  if(data.status == "error") {
+  if(data.status === "error") {
     //alert("Error: " + data.detail + " ()");
     $('status').innerHTML = "Fail to save. You cannot save examples!";
     info.show();
     setTimeout(hideMessage, 3000);
   }
   else if(data.status == "done") {
+    // update presets
+    socket.emit('getsavelist', { type: 'volume', tag:  tag});
+    
     //alert("Saved succesfully!");
     $('status').innerHTML = "Saved successfully!";
     info.show();
     setTimeout(hideMessage, 2000);
   }
 });
+
+function updateDatDropdown(target, list){   
+    let innerHTMLStr = "";
+    if(list.constructor.name == 'Array'){
+        for(var i=0; i<list.length; i++){
+            var str = "<option value='" + list[i] + "'>" + list[i] + "</option>";
+            innerHTMLStr += str;        
+        }
+    }
+
+    if(list.constructor.name == 'Object'){
+        for(var key in list){
+            var str = "<option value='" + list[key] + "'>" + key + "</option>";
+            innerHTMLStr += str;
+        }
+    }
+    if (innerHTMLStr != "") target.domElement.children[0].innerHTML = innerHTMLStr;
+}
+
+socket.on('getsavelist', function(data) {
+  if(data.status === 'error') {
+    $('status').innerHTML = "Failed to get save list!";
+    info.show();
+    setTimeout(hideMessage, 3000);
+  }
+  else if(data.status == "done") {
+    presetList = data.result;
+    console.log('getsavelist', presetList);
+    updateDatDropdown(hSave, presetList);
+    guiObj.saveItem = currPreset;
+  }
+})
 
 function hideMessage() {
   info.hide();
@@ -313,14 +388,23 @@ function imageLoaded(image) {
 
   if (!state.properties.nogui) {
     var gui = new dat.GUI();
-    if (state.properties.server)
-      gui.add({"Update" : function() {ajaxPost(state.properties.server + "/update", "data=" + encodeURIComponent(getData(true, true)));}}, 'Update');
-    /* LOCALSTORAGE DISABLED
-    gui.add({"Reset" : function() {resetFromData(reset);}}, 'Reset');*/
-    gui.add({"Restore" : function() {resetFromData(state);}}, 'Restore')
-    gui.add({"Save" : function() {saveDataJson();}}, 'Save');;
+    hSave = gui.add(guiObj, 'saveItem', presetList).name('Preset').listen();
+    hSave.onFinishChange(function(value) {
+      guiObj.saveItem = value;
+			// load setting and update gui
+			let preset = 'vol_web.json';
+			if(value !== 'default') preset = 'vol_web_' + value + '.json';
+			let parts = window.location.href.split('?');
+			window.location.href = parts[0] + '?data=data/tags/96e443/volume_result/' + preset + '&reset';
+		});
+    
+    
+    //gui.add({"Restore" : function() {resetFromData(state);}}, 'Restore')
+    gui.add({"Save" : function() {saveDataJson();}}, 'Save');
+    gui.add({"SaveAs": function() {saveDataJsonAs();}}, 'SaveAs').name('Save As');
     //gui.add({"Export" : function() {exportData();}}, 'Export');
     //gui.add({"loadFile" : function() {document.getElementById('fileupload').click();}}, 'loadFile'). name('Load Image file');
+    
     gui.add({"ColourMaps" : function() {window.colourmaps.toggle();}}, 'ColourMaps');
 
     var f = gui.addFolder('Views');
@@ -334,6 +418,9 @@ function imageLoaded(image) {
 
     if (volume) volume.addGUI(gui);
     if (slicer) slicer.addGUI(gui);
+    
+    // update presets
+    socket.emit('getsavelist', { type: 'volume', tag:  tag});
   }
 
   //Save props on exit
