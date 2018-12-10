@@ -395,7 +395,7 @@ function imageLoaded(image) {
 			let preset = 'vol_web.json';
 			if(value !== 'default') preset = 'vol_web_' + value + '.json';
 			let parts = window.location.href.split('?');
-			window.location.href = parts[0] + '?data=data/tags/96e443/volume_result/' + preset + '&reset';
+			window.location.href = parts[0] + '?data=data/tags/' + tag + '/volume_result/' + preset + '&reset';
 		});
     
     
