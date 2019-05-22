@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" />
 <title>WebGL Volume Viewer</title>
+
+<link rel="stylesheet" type="text/css" href="checktag/previs.css">
+<script type="text/javascript" src="checktag/previs.js"></script>
+
 <script src="https://cdn.socket.io/socket.io-1.4.3.js"></script>
 <script type="text/javascript" src="sharevol.js"></script>
 
@@ -90,7 +94,7 @@ html, body {
 
 </head>
 
-<body onload="initPage();" oncontextmenu="return false;">
+<body oncontextmenu="return false;">
 
 <div id="hidden" style="display: none">
   <canvas id="gradient" width="2048" height="1"></canvas>
@@ -121,6 +125,24 @@ html, body {
   </div>
 
 </div></div>
+
+  <div id="passwordModalDialog" class="modal">
+    <div class="modal-content">
+        <p><b>Password is required to view the dataset</b></p>
+        <p id="password-status"></p>
+        <input type="password" id="password" name="password" minlength="8" required>
+        <button id="password-button">Submit</button>
+    </div>
+  </div>
+  <script>
+    var url = new URL(window.location.href);
+    var gTag = url.searchParams.get("tag");
+    console.log("Tag:" + gTag);
+    checkAndLoadPrevisTag(gTag, "", function(info) {
+      console.log("success: now can load data", info);
+      initPage(info.tag, info.dir);
+    });
+  </script>
 
 </body>
 

@@ -9028,16 +9028,21 @@ var socket = io();
 var jsonfile;
 
 // for save as
+var gTag = null;
+var gDir = null;
 var hSave = null;
-var tag = null;
 var presetList = ['default'];
 var currPreset = 'default';
 var guiObj = {
   saveItem: 'default'
 };
 
-function initPage() {
+function initPage(tag, dir) {
   window.onresize = autoResize;
+
+  //set params
+  gTag = tag;
+  gDir = dir;
 
   //Create tool windows
   info = new Popup("info");
@@ -9062,24 +9067,20 @@ function initPage() {
 
   //Colour editing and palette management
   colours = new GradientEditor($('palette'), updateColourmap);
+  
+  //preset
+  currPreset = url.searchParams.get("preset");
+  if(currPreset === null || currPreset === undefined) {
+    currPreset = 'default';
+  }
+  console.log('tag and preset: ', tag, currPreset);
 
   //Load json data?
-  var json = getSearchVariable("data");
-  //Attempt to load default.json
-  if (!json) json = "default.json";
-  
-  // parse tag and preset
-  let parts = json.split('/');
-  tag = parts[2];
-  let preset = parts[4];
-  parts = preset.split('&');
-  preset = parts[0];
-  parts = preset.split('.');
-  preset = parts[0];
-  preset = preset.substr(8);
-  if(preset === '') preset = 'default';
-  currPreset = preset;
-  console.log('tag and preset: ', tag, currPreset);
+  var json = "data/tags/" + dir + "/volume_result/vol_web.json";
+  if(currPreset !== 'default') {
+    json = "data/tags/" + dir + "/volume_result/vol_web_" + currPreset + ".json";
+  } 
+  console.log(json);
 
   $('status').innerHTML = "Loading params...";
   ajaxReadFile(decodeURI(json), loadData, true);
@@ -9103,6 +9104,10 @@ function loadStoredData(key) {
 
 function loadData(src, fn) {
   var parsed = JSON.parse(src);
+  var urlparts = parsed.objects[0].volume.url.split('/');
+  if(urlparts[2].length === 6)
+    parsed.objects[0].volume.url = parsed.objects[0].volume.url.replace(gTag, gDir);
+  
   if (parsed.volume) {
     //Old data format
     state = {}
@@ -9137,7 +9142,6 @@ function loadData(src, fn) {
     object.contrast = parsed.volume.properties.contrast;
     //The volume data sub-object
     object.volume = {};
-    object.volume.url = parsed.url;
     object.volume.res = parsed.res;
     object.volume.scale = parsed.scale;
     //The slicer properties
@@ -9164,13 +9168,9 @@ function loadData(src, fn) {
 
   reset = state; //Store orig for reset
   //Storage reset?
-  if (getSearchVariable("reset")) {localStorage.removeItem(fn); console.log("Storage cleared");}
-  /* LOCALSTORAGE DISABLED
-  //Load any stored presets for this file
-  filename = fn;
-  loadStoredData(fn);
-  */
-
+  //if (getSearchVariable("reset")) {localStorage.removeItem(fn); console.log("Storage cleared");}
+  localStorage.removeItem(fn); console.log("Storage cleared");
+  
   //Setup default props from original data...
   //state.objects = reset.objects;
   if (!state.objects[0].volume.res) state.objects[0].volume.res = [256, 256, 256];
@@ -9260,7 +9260,7 @@ function saveDataJsonAs() {
       return;
   }
   preset = preset.replace(/ /g,"_");
-  let file = 'data/tags/' + tag + '/volume_result/vol_web_' + preset + '.json';
+  let file = 'data/tags/' + gDir + '/volume_result/vol_web_' + preset + '.json';
   console.log(file);
   socket.emit('savedatajson', { file: file, json: getData() });
 }
@@ -9274,7 +9274,7 @@ socket.on('savedatajson', function (data) {
   }
   else if(data.status == "done") {
     // update presets
-    socket.emit('getsavelist', { type: 'volume', tag:  tag});
+    socket.emit('getsavelist', { type: 'volume', tag:  gTag, dir: gDir});
     
     //alert("Saved succesfully!");
     $('status').innerHTML = "Saved successfully!";
@@ -9397,10 +9397,10 @@ function imageLoaded(image) {
     hSave.onFinishChange(function(value) {
       guiObj.saveItem = value;
 			// load setting and update gui
-			let preset = 'vol_web.json';
-			if(value !== 'default') preset = 'vol_web_' + value + '.json';
+			let preset = 'default';
+			if(value !== 'default') preset = value;
 			let parts = window.location.href.split('?');
-			window.location.href = parts[0] + '?data=data/tags/' + tag + '/volume_result/' + preset + '&reset';
+			window.location.href = parts[0] + '?tag=' + gTag + '&preset=' + preset;
 		});
     
     
@@ -9425,7 +9425,7 @@ function imageLoaded(image) {
     if (slicer) slicer.addGUI(gui);
     
     // update presets
-    socket.emit('getsavelist', { type: 'volume', tag:  tag});
+    socket.emit('getsavelist', { type: 'volume', tag:  gTag, dir: gDir});
   }
 
   //Save props on exit
