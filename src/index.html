@@ -138,10 +138,16 @@ html, body {
     var url = new URL(window.location.href);
     var gTag = url.searchParams.get("tag");
     console.log("Tag:" + gTag);
-    checkAndLoadPrevisTag(gTag, "", function(info) {
-      console.log("success: now can load data", info);
-      initPage(info.tag, info.dir);
-    });
+    if(gTag === null || gTag === undefined || gTag.length !== 6) {
+      alert('Invalid tag');
+    }
+    else {
+      checkAndLoadPrevisTag(gTag, "", function(info) {
+        var dir = info.dir || info.tag;
+        console.log("success: now can load data", info);
+        initPage(gTag, dir);
+      });
+    }
   </script>
 
 </body>
