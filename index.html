@@ -644,7 +644,7 @@ html, body {
     <div class="modal-content">
         <p><b>Password is required to view the dataset</b></p>
         <p id="password-status"></p>
-        <input type="password" id="password" name="password" minlength="8" required>
+        <input type="password" id="password" name="password" required>
         <button id="password-button">Submit</button>
     </div>
   </div>
@@ -652,7 +652,7 @@ html, body {
     var url = new URL(window.location.href);
     var gTag = url.searchParams.get("tag");
     console.log("Tag:" + gTag);
-    if(gTag === null || gTag === undefined || gTag.length !== 6) {
+    if(gTag === null || gTag === undefined) {
       alert('Invalid tag');
     }
     else {
