@@ -260,6 +260,61 @@ function saveDataJsonAs() {
   socket.emit('savedatajson', { file: file, json: getData() });
 }
 
+function resizeImage(base64Str, callback) {
+  var MAX_WIDTH = 512;
+  var MAX_HEIGHT = 512;
+
+  var img = new Image();
+  img.src = base64Str;
+  img.onload = function(){
+      var height = img.height;
+      var width = img.width;
+      if (width > height) {
+          if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+          }
+      } 
+      else {
+          if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+          }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      callback(canvas.toDataURL());
+      canvas = ctx = null;
+  }   
+}
+
+function saveThumbnail() {
+  console.log('saveThumbnail');
+  if(volume) {
+    volume.draw(false, false, true);
+    var imgData = volume.canvas.toDataURL();
+    /* DEBUG display image
+    var image = new Image(); image.src = imgData;
+    var w = window.open("");
+    w.document.write(image.outerHTML); */
+    
+    resizeImage(imgData, function(resizedImg) {
+      //console.log(resizedImg);
+      socket.emit('savethumbnail', {type: 'volume', tag:  gTag, dir: gDir, base64: resizedImg});
+    });
+  }
+}
+
+socket.on('savethumbnail', function(data) {
+  data.status === 'error' ? $('status').innerHTML = "Failed to save thumbnail!" :
+                            $('status').innerHTML = "Saved thumbnail successfully!";
+  info.show();
+  setTimeout(hideMessage, 3000);
+});
+
 socket.on('savedatajson', function (data) {
   if(data.status === "error") {
     //alert("Error: " + data.detail + " ()");
@@ -404,6 +459,7 @@ function imageLoaded(image) {
     gui.add({"SaveAs": function() {saveDataJsonAs();}}, 'SaveAs').name('Save As');
     //gui.add({"Export" : function() {exportData();}}, 'Export');
     //gui.add({"loadFile" : function() {document.getElementById('fileupload').click();}}, 'loadFile'). name('Load Image file');
+    gui.add({"SaveThumbnail": function() {saveThumbnail();}}, 'SaveThumbnail').name("Save thumbnail");
     
     gui.add({"ColourMaps" : function() {window.colourmaps.toggle();}}, 'ColourMaps');
 

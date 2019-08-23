@@ -296,7 +296,7 @@ Volume.prototype.get = function(matrix) {
 var frames = 0;
 var testtime;
 
-Volume.prototype.draw = function(lowquality, testmode) {
+Volume.prototype.draw = function(lowquality, testmode, withclearcolor = false) {
   if (!this.properties || !this.webgl) return; //Getting called before vars defined, TODO:fix
   //this.time = new Date().getTime();
   if (this.width == 0 || this.height == 0) {
@@ -320,7 +320,7 @@ Volume.prototype.draw = function(lowquality, testmode) {
   //Reset to auto-size...
   //this.width = this.height = 0;
   //console.log(this.width + "," + this.height);
-
+  withclearcolor ? this.gl.clearColor(1, 1, 0.933, 1) : this.gl.clearColor(0, 0, 0, 0);
   this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   this.gl.viewport(this.webgl.viewport.x, this.webgl.viewport.y, this.webgl.viewport.width, this.webgl.viewport.height);
 
