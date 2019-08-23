@@ -161,7 +161,7 @@ function Volume(props, image, interactive, parentEl) {
   this.properties.brightness = 0.0;
   this.properties.contrast = 1.0;
   this.properties.power = 1.0;
-  this.properties.mindensity = props.volume.mindensity || 0.0;
+  this.properties.mindensity = props.volume.mindensity || 0.0001;
   this.properties.maxdensity = props.volume.mindensity || 1.0;
   this.properties.usecolourmap = false;
   this.properties.tricubicFilter = false;
